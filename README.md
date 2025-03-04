@@ -19,6 +19,7 @@ To run the code two wallets are needed, although it is likely that this specific
 export PRIVATE_KEY_0=...
 export PRIVATE_KEY_1=...
 echo 0 > pbh.nonce # Or put the PBH nonce to start from
+# Update the pbh_ctf.toml file
 RUST_LOG=info cargo run
 ```
 
