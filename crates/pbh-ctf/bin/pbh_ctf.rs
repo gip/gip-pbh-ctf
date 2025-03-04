@@ -113,32 +113,31 @@ async fn main() -> Result<()> {
         pbh_nonce: u16,
     ) -> Result<TxEnvelope> {
         tracing::info!("Preparing PBH CTF transaction");
-        let calls = pbh_ctf::client_contract_multicall(player, 2, PBH_CTF_CONTRACT);
+        let calls = pbh_ctf::client_contract_multicall(player, 60000, PBH_CTF_CONTRACT);
         let tx = CTFTransactionBuilder::new()
             .to(PBH_ENTRY_POINT)
             .nonce(wallet_nonce)
             .from(signer.address())
-            .with_pbh_multicall(world_id, pbh_nonce, signer.address(), calls, 1)
+            .with_pbh_multicall(world_id, pbh_nonce, signer.address(), calls, 3)
             .await?
             .build(signer.clone())
             .await?;
         
         Ok(tx)
     }
-
     async fn prepare_ctf_transaction(
         player: Address,
         wallet_nonce: u64,
         signer: PrivateKeySigner,
     ) -> Result<TxEnvelope> {
         tracing::info!("Preparing CTF transaction");
-        let calldata = pbh_ctf::client_contract_calldata(player, 2);
+        let calldata = pbh_ctf::client_contract_calldata(player, 1); // Was 20000
         let tx = CTFTransactionBuilder::new()
             .to(PBH_CTF_CONTRACT)
             .nonce(wallet_nonce)
             .from(signer.address())
-            .max_fee_per_gas(2e6 as u128)
-            .max_priority_fee_per_gas(2e6 as u128)
+            .max_fee_per_gas(24e6 as u128)
+            .max_priority_fee_per_gas(24e6 as u128)
             .input(calldata.into())
             .build(signer.clone())
             .await?;
@@ -146,7 +145,7 @@ async fn main() -> Result<()> {
     }
 
     let mut txs: Vec<TxEnvelope> = Vec::new();
-    for i in 0..50 {
+    for i in 0..4 {
         let is_0 = i % 2 == 0;
         let is_pbh = i % 4 < 2;
         let signer = if is_0 { signer_0.clone() } else { signer_1.clone() };

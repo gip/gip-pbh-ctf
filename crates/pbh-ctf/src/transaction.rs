@@ -26,9 +26,9 @@ pub struct CTFTransactionBuilder {
 impl CTFTransactionBuilder {
     pub fn new() -> Self {
         let tx = TransactionRequest::default()
-            .gas_limit(260_000)
-            .max_fee_per_gas(1_000_008 as u128)
-            .max_priority_fee_per_gas(0_500_008 as u128)
+            .gas_limit(16_000_000)
+            .max_fee_per_gas(1_500_008 as u128)
+            .max_priority_fee_per_gas(1_000_008 as u128)
             .with_chain_id(WC_SEPOLIA_CHAIN_ID);
 
         CTFTransactionBuilder { tx }
@@ -51,8 +51,6 @@ impl CTFTransactionBuilder {
             payload: pbh_payload.into(),
         };
 
-        // let ra = rand::thread_rng().gen_range(1..800_000_000);
-        // let ra = if high_fee { 0_100_000_004 } else { 1_000_004 };
         let ra: u128 = fee as u128 * 200_000_000;
         let tx = self
             .tx
