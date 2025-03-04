@@ -1,4 +1,4 @@
-# pbh-ctf
+# gip-pbh-ctf
 
 On PBH-enabled Worldchain, there are four invariants that should always hold true when the World Chain Builder is producing blocks. It is important to note that if the builder block is not selected, these conditions are not enforced.
 
@@ -23,4 +23,4 @@ RUST_LOG=info cargo run
 ```
 
 The code will create 50 transactions be increasing nonce n0, n1, ..., n49. The transactions will then by submitted starting with n1, n2,..., n49 and finally n0. When n0 is submitted, all the transactions can be executed. The code will create blocks similar to [testnet block 10263444](https://worldchain-sepolia.explorer.alchemy.com/block/10263444?tab=txs).
-Obviously PBH transaction are not ordered before non-PBH transactions. It seems that ordering by nonce takes priority hence breaking the invariant. 
+Obviously PBH transaction are not ordered before non-PBH transactions. It seems that ordering by nonce takes priority hence breaking the stated invariant. 
