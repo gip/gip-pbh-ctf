@@ -13,8 +13,6 @@ pub struct CTFConfig {
     pub provider_uri: String,
     /// Address of the player to keep score on the leaderboard
     pub player_address: Address,
-
-    pub winner_address: Address,
 }
 
 impl CTFConfig {
