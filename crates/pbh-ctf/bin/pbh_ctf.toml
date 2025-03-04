@@ -1,0 +1,7 @@
+semaphore_secret = "CrhzFyIBMUWsFbK/4i0PxGEUGb9b7xG9c87NyzyYaSwFqqUPkmoWGEorP7iG7XV7ipvP4b6JC7ZTZhif7P+i0g=="
+
+provider_uri = "wss://worldchain-sepolia.g.alchemy.com/v2/2qZalLCM_WGzzhvUSXlOV_tvlTxRHg4E"
+
+winner_address = "0x2Eb67DdFf6761bC0938e670bf1e1ed46110DDABb"
+
+player_address = "0x2Eb67DdFf6761bC0938e670bf1e1ed46110DDABb"
