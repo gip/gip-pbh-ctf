@@ -6,13 +6,13 @@ The goal of this work is to validate these invariants by attempting to break the
 
 Please refer to this [repo](https://github.com/gip/pbh-ctf) for more information.
 
-## Finging #0: Transaction Stuck
+## Finging #0: Transaction / Block Issue
 
 Starting on or about March 5th, transaction execution started to behave differently. The [video](https://www.loom.com/share/79d1c6c4a0964b0990066fa1dcbe0296?sid=292761e9-2fbf-46be-9f5d-7aafd9feabb5) shows the following:
-* At 2025-03-08T04:35:50, `RUST_LOG=info cargo run -- --n 1 --iterations 10` sends transaction `0x2a276ba1c7651d7106ba3c8c2f1b79a91792932a97abd1f4c5dd8beca40f5851`. It is executed right away.
-* At 2025-03-08T04:36:04, same commands submits a new transaction `0x2822e865ff9daadffab11c1fb64ea24fc10b3cb178c52e060c39d9cf9c73a116`. It is not executed at once.
-* After 1 minute, the command `RUST_LOG=info cargo run -- --n 1 --iterations 10` is used to re-send the transaction. The result is `already known`. Transaction has not been executed.
-* To unlock the transaction, the user retries a number of time. At around 2025-03-08T04:38:01, thanks to the "reminders", the transaction executes. 
+* At 2025-03-08T04:35:50, `RUST_LOG=info cargo run -- --n 1 --iterations 10` sends transaction [0x2a276ba1c7651d7106ba3c8c2f1b79a91792932a97abd1f4c5dd8beca40f5851](https://worldchain-sepolia.explorer.alchemy.com/tx/0x2a276ba1c7651d7106ba3c8c2f1b79a91792932a97abd1f4c5dd8beca40f5851). It is executed right away.
+* At 2025-03-08T04:36:04, same commands submits a new transaction [0x2822e865ff9daadffab11c1fb64ea24fc10b3cb178c52e060c39d9cf9c73a116](https://worldchain-sepolia.explorer.alchemy.com/tx/0x2822e865ff9daadffab11c1fb64ea24fc10b3cb178c52e060c39d9cf9c73a116). It is *not* executed at once.
+* After 1 minute, the command `RUST_LOG=info cargo run -- --n 1 --iterations 10` is used to re-send a transaction. The result is `already known`. Transaction has clearly not been executed.
+* To unlock the transaction, the user retries a number of times. At around 2025-03-08T04:38:01, thanks to the "reminders", the transaction executes. 
 
 No congestion on the chain so really not sure what that is happening. I've tried with different gas / priority values.
 
