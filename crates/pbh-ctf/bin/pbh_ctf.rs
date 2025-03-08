@@ -8,6 +8,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
     io::Read,
 };
+use clap::Parser;
 
 use alloy_network::Network;
 use alloy_network::eip2718::Encodable2718;
@@ -23,6 +24,26 @@ use pbh_ctf::{
     world_id::WorldID,
 };
 use reqwest::Url;
+
+// Add CLI args struct
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(long, default_value_t = 350_000)]
+    gas_limit: u64,
+    
+    #[arg(long, default_value_t = 10)]
+    iterations_pbh: u64,
+    
+    #[arg(long, default_value_t = 10)]
+    iterations: u64,
+
+    #[arg(long, default_value_t = 4)]
+    n: u64,
+
+    #[arg(short, long, default_value_t = false)]
+    reverse: bool,
+}
 
 // Function to log events to pbh.log
 fn now() -> String {
@@ -76,6 +97,9 @@ fn write_pbh_nonce(nonce: u16) -> Result<()> {
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
+    // Parse command line arguments
+    let args = Args::parse();
+
     let config_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("bin/pbh_ctf.toml");
     let config = CTFConfig::load(Some(config_path.as_path()))?;
     let private_key_0 = std::env::var("PRIVATE_KEY_0")?;
@@ -84,8 +108,7 @@ async fn main() -> Result<()> {
     let signer_1 = private_key_1.parse::<PrivateKeySigner>()?;
     let provider = Arc::new(
         ProviderBuilder::new()
-            .on_ws(WsConnect::new(config.provider_uri.parse::<Url>()?))
-            .await?,
+        .on_http(config.provider_uri.parse::<Url>()?)
     );
     tracing::info!("signer_0.address(): {}", signer_0.address());
     tracing::info!("signer_1.address(): {}", signer_1.address());
@@ -111,14 +134,19 @@ async fn main() -> Result<()> {
         signer: PrivateKeySigner,
         world_id: &WorldID,
         pbh_nonce: u16,
+        gas_limit: u64,
+        iterations: u64,
     ) -> Result<TxEnvelope> {
         tracing::info!("Preparing PBH CTF transaction");
-        let calls = pbh_ctf::client_contract_multicall(player, 60000, PBH_CTF_CONTRACT);
+        let calls = pbh_ctf::client_contract_multicall(player, iterations, PBH_CTF_CONTRACT);
         let tx = CTFTransactionBuilder::new()
+            .gas_limit(gas_limit)
             .to(PBH_ENTRY_POINT)
             .nonce(wallet_nonce)
             .from(signer.address())
-            .with_pbh_multicall(world_id, pbh_nonce, signer.address(), calls, 3)
+            .max_fee_per_gas(2e8 as u128)
+            .max_priority_fee_per_gas(1e8 as u128)
+            .with_pbh_multicall(world_id, pbh_nonce, signer.address(), calls)
             .await?
             .build(signer.clone())
             .await?;
@@ -129,15 +157,18 @@ async fn main() -> Result<()> {
         player: Address,
         wallet_nonce: u64,
         signer: PrivateKeySigner,
+        gas_limit: u64,
+        iterations: u64,
     ) -> Result<TxEnvelope> {
         tracing::info!("Preparing CTF transaction");
-        let calldata = pbh_ctf::client_contract_calldata(player, 1); // Was 20000
+        let calldata = pbh_ctf::client_contract_calldata(player, iterations);
         let tx = CTFTransactionBuilder::new()
+            .gas_limit(gas_limit)
             .to(PBH_CTF_CONTRACT)
             .nonce(wallet_nonce)
             .from(signer.address())
-            .max_fee_per_gas(24e6 as u128)
-            .max_priority_fee_per_gas(24e6 as u128)
+            .max_fee_per_gas(15e8 as u128)
+            .max_priority_fee_per_gas(10e8 as u128)
             .input(calldata.into())
             .build(signer.clone())
             .await?;
@@ -145,15 +176,15 @@ async fn main() -> Result<()> {
     }
 
     let mut txs: Vec<TxEnvelope> = Vec::new();
-    for i in 0..4 {
+    for i in 0..args.n {
         let is_0 = i % 2 == 0;
-        let is_pbh = i % 4 < 2;
+        let is_pbh = i % 4 > 1;
         let signer = if is_0 { signer_0.clone() } else { signer_1.clone() };
         let wallet_nonce = if is_0 { wallet_nonce_0 } else { wallet_nonce_1 };
         let tx = if is_pbh {
-            prepare_pbh_ctf_transaction(player, wallet_nonce, signer, &world_id, pbh_nonce).await?
+            prepare_pbh_ctf_transaction(player, wallet_nonce, signer, &world_id, pbh_nonce, args.gas_limit, args.iterations_pbh).await?
         } else {
-            prepare_ctf_transaction(player, wallet_nonce, signer).await?
+            prepare_ctf_transaction(player, wallet_nonce, signer, args.gas_limit, args.iterations).await?
         };
         txs.push(tx);
         if is_pbh {
@@ -168,7 +199,7 @@ async fn main() -> Result<()> {
     }
 
     let mut txs = txs;
-    if txs.len() > 1 {
+    if args.reverse && txs.len() > 1 {
         let first_two = txs.drain(0..2).collect::<Vec<_>>();
         txs.extend(first_two);
     }

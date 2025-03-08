@@ -6,7 +6,7 @@ The goal of this work is to validate these invariants by attempting to break the
 
 Please refer to this [repo](https://github.com/gip/pbh-ctf) for more information.
 
-## Issue #1 PBH Ordering Rules
+## Finding #1: PBH Ordering Rules
 
 The invariant states
 ```
@@ -20,17 +20,20 @@ export PRIVATE_KEY_0=...
 export PRIVATE_KEY_1=...
 echo 0 > pbh.nonce # Or put the PBH nonce to start from
 # Update the pbh_ctf.toml file
-RUST_LOG=info cargo run
+RUST_LOG=info cargo run -- --n 50
 ```
 
 The code will create 50 transactions be increasing nonce n0, n1, ..., n49. The transactions will then by submitted starting with n1, n2,..., n49 and finally n0. When n0 is submitted, all the transactions can be executed. The code will create blocks similar to [testnet block 10263444](https://worldchain-sepolia.explorer.alchemy.com/block/10263444?tab=txs).
 Obviously PBH transaction are not ordered before non-PBH transactions. It seems that ordering by nonce takes priority hence breaking the stated invariant. 
 
-## Issue #2 PBH Gas per UserOp/Tx
+## Finding #2: PBH Gas per UserOp/Tx
 
 No single PBH UserOp or PBH transaction can exceed `pbhGasLimit` (fixed at 15_000_000 here). 
 
 Using the code but increasing the number of iterations in the inner contract to a higher value (4000), and setting the max gas value to 16_000_000 for the PBH contract, the following issues were encoutered:
-* Delay in transaction execution (sometimes 20 mins) even though the nonce was current and the blocks generated were empty
+* Delay in transaction execution (sometimes 20 mins) even though the nonce was current and the blocks generated were empty - see finding #3
 * Blocks without stamping, see for instance block [10290165](https://worldchain-sepolia.explorer.alchemy.com/block/10290165)
 * Inconsistent failures, see for instance tx [0xa12bb11d8a479bc1fe69ae087b2808e4e5bd28fbd577bb8802b970021e48e509](https://worldchain-sepolia.explorer.alchemy.com/tx/0xa12bb11d8a479bc1fe69ae087b2808e4e5bd28fbd577bb8802b970021e48e509). This transaction consumes more than 15_000_000, breaking the invariant that PBH transactions can go above the `pbhGasLimit` amount. Even the inner transaction goes above that amount, hitting 15_168_670, so well above the 15_000_000 limit.
+
+## Finding #3: Reproducing creation of blocks without stamping
+

@@ -26,9 +26,9 @@ pub struct CTFTransactionBuilder {
 impl CTFTransactionBuilder {
     pub fn new() -> Self {
         let tx = TransactionRequest::default()
-            .gas_limit(16_000_000)
-            .max_fee_per_gas(1_500_008 as u128)
-            .max_priority_fee_per_gas(1_000_008 as u128)
+            // .gas_limit(3_000_000)
+            // .max_fee_per_gas(3_500_000 as u128)
+            // .max_priority_fee_per_gas(3_000_000 as u128)
             .with_chain_id(WC_SEPOLIA_CHAIN_ID);
 
         CTFTransactionBuilder { tx }
@@ -40,7 +40,6 @@ impl CTFTransactionBuilder {
         pbh_nonce: u16,
         from: Address,
         calls: Vec<Call3>,
-        fee: u8,
     ) -> Result<Self> {
         // Get the inclusion proof for the identity in the from the World Tree
         let signal_hash = hash_to_field(&SolValue::abi_encode_packed(&(from, calls.clone())));
@@ -51,11 +50,11 @@ impl CTFTransactionBuilder {
             payload: pbh_payload.into(),
         };
 
-        let ra: u128 = fee as u128 * 200_000_000;
+        //let ra: u128 = fee as u128 * 200_000_000;
         let tx = self
             .tx
-            .max_fee_per_gas(ra)
-            .max_priority_fee_per_gas(ra)
+            // .max_fee_per_gas(ra)
+            // .max_priority_fee_per_gas(ra)
             .input(TransactionInput::new(calldata.abi_encode().into()));
         Ok(Self { tx })
     }
