@@ -13,7 +13,7 @@ use clap::Parser;
 use alloy_network::Network;
 use alloy_network::eip2718::Encodable2718;
 use alloy_primitives::Address;
-use alloy_provider::{Provider, ProviderBuilder, WsConnect};
+use alloy_provider::{Provider, ProviderBuilder};
 use alloy_signer_local::PrivateKeySigner;
 use alloy_consensus::TxEnvelope;
 use config::CTFConfig;
